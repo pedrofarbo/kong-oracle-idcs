@@ -31,7 +31,7 @@ Body:
 
 Fique a vontade para fazer um Fork do repositório.
 
-Qualquer dúvida entrar em contato com pedrofarbo@gmail.com
+Esse plugin é opensource e está sendo mantido por pedrofarbo@gmail.com
 
 EN: 
 
@@ -64,6 +64,4 @@ Body:
 
 Feel free to fork the repository.
 
-For any questions, please contact pedrofarbo@gmail.com.
-
-
+This plugin is open source and it is being maintained by pedrofarbo@gmail.com.
