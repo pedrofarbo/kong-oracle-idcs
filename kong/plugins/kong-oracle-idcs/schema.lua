@@ -19,7 +19,7 @@ return {
                 type = "record",
                 fields = {
                   { client_id = { type = "string", required = true }, },
-                  { client_secret = { type = "string", required = true }, },
+                  { client_secret = { type = "string", required = true, encrypted = true }, },
                   { scope = { type = "string", required = false }, },
                 }
               },
