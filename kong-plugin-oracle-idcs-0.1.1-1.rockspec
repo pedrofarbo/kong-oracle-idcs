@@ -1,6 +1,6 @@
 local plugin_name = "oracle-idcs"
 local package_name = "kong-plugin-"..plugin_name
-local package_version = "0.1.0"
+local package_version = "0.1.1"
 local rockspec_revision = "1"
 
 package = package_name
