@@ -1,90 +1,222 @@
-PLUGIN KONG ORACLE IDCS
+# Kong Oracle IDCS Authentication Plugin
 
-PT-BR: 
+[![Version](https://img.shields.io/badge/version-0.2.2-blue.svg)](https://github.com/pedrofarbo/kong-oracle-idcs)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Kong](https://img.shields.io/badge/Kong-3.x-orange.svg)](https://konghq.com/)
 
-Sobre:
+A Kong Gateway plugin that provides seamless integration with Oracle Identity Cloud Service (IDCS) for OAuth2 token authentication and authorization.
 
-A ideia do plugin é viabilizar a integração nativa com a autenticação dos serviços que estão cadastrados no IDCS da Oracle Cloud.
+## 🚀 Features
 
-Como usar: 
+- **Multi-Client Support**: Configure multiple Oracle IDCS clients with fallback validation
+- **Scope Validation**: Optional scope-based authorization per client
+- **Token Introspection**: Validates tokens using Oracle IDCS introspection endpoint
+- **Robust Error Handling**: Comprehensive error handling with detailed logging
+- **High Performance**: Optimized for production environments
+- **Debug Logging**: Detailed debug information when needed
 
-Como adicionar o plugin em um Kong gateway services via RestAPI do próprio admin do Kong: 
+## 📋 Requirements
 
-POST - http://{kong-base-path}/services/{id}/plugins
+- Kong Gateway 3.x or higher
+- Lua 5.1 or higher
+- lua-resty-http 0.15 or higher
+- Oracle Identity Cloud Service (IDCS) instance
 
-Body:
+## 📦 Installation
 
-{
-	"name": "kong-oracle-idcs",
-	"config": {
-		"oracle_idcs_base_url": {ORACLE-IDCS-BASE-PATH}, (Obrigatório)
-		"clients": [
-			{
-				"client_id": {client_id}, (Obrigatório)
-				"client_secret": {client_secret}, (Obrigatório)
-				"scope": {scopes} (Opcional)
-			}
-	    ...
-		]
-	}
-}
+### Method 1: Using LuaRocks (Recommended)
 
-## Versions / Versões
+```bash
+luarocks install kong-plugin-oracle-idcs
+```
 
-### v0.2.2 (Latest)
-- 🐛 **Bug Fix**: Fixed validation issue where only the first configured client was being tested
-- 🚀 **Enhancement**: Added support for multiple client validation (tries all clients until one succeeds)
-- 📊 **Logging**: Improved logging with debug level for detailed information
-- ✅ **Validation**: Added token 'active' field validation
-- 🛡️ **Error Handling**: Enhanced error handling with better error messages and JSON decode protection
+### Method 2: Using .src.rock file
 
-### v0.1.1
-- Initial release with basic Oracle IDCS authentication support
-
-## Installation / Instalação
-
-### Using .src.rock file:
 ```bash
 luarocks install kong-plugin-oracle-idcs-0.2.2-1.src.rock
 ```
 
-### Manual installation:
-1. Copy the `kong/plugins/kong-oracle-idcs/` directory to your Kong plugins directory
-2. Add `kong-oracle-idcs` to your Kong configuration's `plugins` list
+### Method 3: Manual Installation
 
-Fique a vontade para fazer um Fork do repositório.
+1. Clone this repository:
+   ```bash
+   git clone https://github.com/pedrofarbo/kong-oracle-idcs.git
+   ```
 
-Esse plugin é opensource e está sendo mantido por pedrofarbo@gmail.com
+2. Copy the plugin to your Kong plugins directory:
+   ```bash
+   cp -r kong/plugins/kong-oracle-idcs /usr/local/share/lua/5.1/kong/plugins/
+   ```
 
-EN: 
+3. Add the plugin to your Kong configuration:
+   ```bash
+   export KONG_PLUGINS=bundled,kong-oracle-idcs
+   ```
 
-About:
+## ⚙️ Configuration
 
-The idea of the plugin is to enable native integration with the authentication of services registered in Oracle Cloud's IDCS.
+### Plugin Configuration Schema
 
-How to use:
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `oracle_idcs_base_url` | string | ✅ | Oracle IDCS introspection endpoint URL |
+| `clients` | array | ✅ | Array of Oracle IDCS client configurations |
+| `clients[].client_id` | string | ✅ | Oracle IDCS client ID |
+| `clients[].client_secret` | string | ✅ | Oracle IDCS client secret (encrypted) |
+| `clients[].scope` | string | ❌ | Required scope for this client (optional) |
 
-To add the plugin to a Kong gateway service via the Kong admin's RestAPI:
+### Example Configuration
 
-POST - http://{kong-base-path}/services/{id}/plugins
+#### Via Kong Admin API
 
-Body:
+```bash
+curl -X POST http://kong-admin:8001/services/{service-id}/plugins \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "kong-oracle-idcs",
+    "config": {
+      "oracle_idcs_base_url": "https://your-idcs-domain.identity.oraclecloud.com/oauth2/v1/introspect",
+      "clients": [
+        {
+          "client_id": "your-primary-client-id",
+          "client_secret": "your-primary-client-secret",
+          "scope": "read:users"
+        },
+        {
+          "client_id": "your-fallback-client-id", 
+          "client_secret": "your-fallback-client-secret"
+        }
+      ]
+    }
+  }'
+```
 
-{
-	"name": "kong-oracle-idcs",
-	"config": {
-		"oracle_idcs_base_url": {ORACLE-IDCS-BASE-PATH}, (Required)
-		"clients": [
-			{
-				"client_id": {client_id}, (Required)
-				"client_secret": {client_secret}, (Required)
-				"scope": {scopes} (Optional)
-			}
-		...
-		]
-	}
-}
+#### Via Kong Declarative Configuration
 
-Feel free to fork the repository.
+```yaml
+plugins:
+- name: kong-oracle-idcs
+  service: your-service
+  config:
+    oracle_idcs_base_url: "https://your-idcs-domain.identity.oraclecloud.com/oauth2/v1/introspect"
+    clients:
+      - client_id: "your-primary-client-id"
+        client_secret: "your-primary-client-secret"
+        scope: "read:users"
+      - client_id: "your-fallback-client-id"
+        client_secret: "your-fallback-client-secret"
+```
 
-This plugin is open source and it is being maintained by pedrofarbo@gmail.com.
+## 🔧 Usage
+
+### Making Authenticated Requests
+
+Once the plugin is configured, clients must include a valid Bearer token in the Authorization header:
+
+```bash
+curl -X GET http://your-kong-gateway:8000/your-protected-endpoint \
+  -H "Authorization: Bearer your-oauth2-token"
+```
+
+### Response Scenarios
+
+| Scenario | HTTP Status | Response |
+|----------|-------------|----------|
+| Valid token with correct scope | 200 | Request forwarded to upstream |
+| Missing Authorization header | 401 | `{"message": "Acesso não autorizado!"}` |
+| Invalid token format | 401 | `{"message": "Formato do token inválido!"}` |
+| Expired token | 401 | `{"message": "Token expirado!"}` |
+| Invalid token | 401 | `{"message": "Token inválido!"}` |
+| Insufficient scope | 403 | `{"message": "Acesso não autorizado! Scope necessário: {scope}"}` |
+| IDCS service error | 500 | `{"message": "Internal Server Error"}` |
+
+## 🔄 How It Works
+
+1. **Token Extraction**: The plugin extracts the Bearer token from the Authorization header
+2. **Multi-Client Validation**: Iterates through configured clients, attempting validation with each
+3. **Token Introspection**: Calls Oracle IDCS introspection endpoint for each client
+4. **Token Validation**: Checks if token is active and not expired
+5. **Scope Authorization**: Validates required scopes if configured
+6. **Access Decision**: Allows request if any client successfully validates the token
+
+## 📊 Logging
+
+The plugin provides comprehensive logging at different levels:
+
+- **DEBUG**: Detailed validation steps, token information, and client testing
+- **WARN**: Failed validations, JSON decode errors, and final rejections
+- **ERROR**: Critical errors and service failures
+
+To enable debug logging, set Kong's log level:
+
+```bash
+export KONG_LOG_LEVEL=debug
+```
+
+## 🔄 Version History
+
+### v0.2.2 (Latest) - 2025-09-10
+- 🐛 **Critical Bug Fix**: Fixed validation issue where only the first configured client was being tested
+- 🚀 **Multi-Client Enhancement**: Added proper support for multiple client validation with fallback
+- 📊 **Improved Logging**: Changed verbose logs to debug level for better production performance
+- ✅ **Enhanced Validation**: Added token 'active' field validation from IDCS response
+- 🛡️ **Robust Error Handling**: Enhanced error handling with JSON decode protection and better error messages
+- 🔧 **Code Quality**: Refactored code with helper functions for better maintainability
+
+### v0.1.1 - Initial Release
+- Basic Oracle IDCS authentication support
+- Single client configuration
+- Token introspection and scope validation
+
+## 🛠️ Development
+
+### Building from Source
+
+```bash
+git clone https://github.com/pedrofarbo/kong-oracle-idcs.git
+cd kong-oracle-idcs
+luarocks make kong-plugin-oracle-idcs-0.2.2-1.rockspec
+```
+
+### Running Tests
+
+```bash
+# Install test dependencies
+luarocks install busted
+luarocks install luacov
+
+# Run tests
+busted spec/
+```
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 📞 Support
+
+- **Issues**: [GitHub Issues](https://github.com/pedrofarbo/kong-oracle-idcs/issues)
+- **Email**: pedrofarbo@gmail.com
+- **Documentation**: [Kong Plugin Development Guide](https://docs.konghq.com/gateway/latest/plugin-development/)
+
+## 🔗 Related Projects
+
+- [Kong Gateway](https://github.com/Kong/kong)
+- [Oracle Identity Cloud Service](https://docs.oracle.com/en/cloud/paas/identity-cloud/)
+- [OAuth 2.0 Token Introspection](https://tools.ietf.org/html/rfc7662)
+
+---
+
+<div align="center">
+  <strong>Made with ❤️ for the Kong community</strong>
+</div>
