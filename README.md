@@ -29,6 +29,29 @@ Body:
 	}
 }
 
+## Versions / Versões
+
+### v0.2.2 (Latest)
+- 🐛 **Bug Fix**: Fixed validation issue where only the first configured client was being tested
+- 🚀 **Enhancement**: Added support for multiple client validation (tries all clients until one succeeds)
+- 📊 **Logging**: Improved logging with debug level for detailed information
+- ✅ **Validation**: Added token 'active' field validation
+- 🛡️ **Error Handling**: Enhanced error handling with better error messages and JSON decode protection
+
+### v0.1.1
+- Initial release with basic Oracle IDCS authentication support
+
+## Installation / Instalação
+
+### Using .src.rock file:
+```bash
+luarocks install kong-plugin-oracle-idcs-0.2.2-1.src.rock
+```
+
+### Manual installation:
+1. Copy the `kong/plugins/kong-oracle-idcs/` directory to your Kong plugins directory
+2. Add `kong-oracle-idcs` to your Kong configuration's `plugins` list
+
 Fique a vontade para fazer um Fork do repositório.
 
 Esse plugin é opensource e está sendo mantido por pedrofarbo@gmail.com
